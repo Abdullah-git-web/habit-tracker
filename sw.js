@@ -1,10 +1,10 @@
 var CACHE_NAME = 'habit-tracker-v1';
 var ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/icons/icon-192.svg',
-    '/icons/icon-512.svg'
+    './',
+    './index.html',
+    './manifest.json',
+    './icons/icon-192.svg',
+    './icons/icon-512.svg'
 ];
 
 self.addEventListener('install', function(e) {
@@ -42,7 +42,7 @@ self.addEventListener('fetch', function(e) {
                 return response;
             }).catch(function() {
                 if (e.request.mode === 'navigate') {
-                    return caches.match('/index.html');
+                    return caches.match('./index.html');
                 }
             });
         })
