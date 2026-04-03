@@ -320,6 +320,45 @@
         .notes-section textarea:focus { outline: none; border-color: var(--border-focus); }
         .notes-section textarea::placeholder { color: var(--text-muted); }
 
+        /* ===== SUBMIT BAR ===== */
+        .submit-bar {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px 24px; display: flex; align-items: center; gap: 20px;
+            margin-top: 16px; margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .submit-progress-info { flex: 1; min-width: 180px; }
+        .submit-progress-info span { font-size: 14px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px; }
+        .submit-progress-track {
+            height: 10px; background: var(--bg-input); border-radius: 5px; overflow: hidden; width: 100%;
+        }
+        .submit-progress-fill {
+            height: 100%; border-radius: 5px; transition: width 0.5s ease, background 0.3s ease;
+            background: linear-gradient(90deg, var(--accent), #a78bfa);
+        }
+        .submit-progress-fill.ready { background: linear-gradient(90deg, var(--success), #34d399); }
+        .btn-submit {
+            display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border: none;
+            border-radius: var(--radius-sm); font-family: var(--font-main); font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: all var(--transition); white-space: nowrap;
+            background: var(--border); color: var(--text-muted);
+        }
+        .btn-submit:disabled { cursor: not-allowed; opacity: 0.6; }
+        .btn-submit.ready {
+            background: linear-gradient(135deg, var(--success), #34d399); color: #fff;
+            box-shadow: 0 4px 16px rgba(45, 212, 160, 0.3); opacity: 1;
+        }
+        .btn-submit.ready:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(45, 212, 160, 0.4); }
+        .btn-submit.submitted {
+            background: var(--bg-input); color: var(--success); border: 2px solid var(--success); opacity: 1;
+            cursor: default;
+        }
+        @keyframes submitPulse {
+            0%, 100% { box-shadow: 0 4px 16px rgba(45, 212, 160, 0.3); }
+            50% { box-shadow: 0 4px 24px rgba(45, 212, 160, 0.6); }
+        }
+        .btn-submit.ready { animation: submitPulse 2s ease-in-out infinite; }
+        .btn-submit.ready:hover { animation: none; }
+
         /* ===== CONFETTI CANVAS ===== */
         #confettiCanvas {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -483,6 +522,17 @@
 
         <div id="todayView">
             <div class="habits-list" id="habitsList"></div>
+            <div id="submitSection" style="display:none">
+                <div class="submit-bar">
+                    <div class="submit-progress-info">
+                        <span id="submitProgressText">0/0 habits completed</span>
+                        <div class="submit-progress-track">
+                            <div class="submit-progress-fill" id="submitProgressFill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <button class="btn btn-submit" id="submitDayBtn" disabled>Submit Day</button>
+                </div>
+            </div>
         </div>
 
         <div id="calendarView" style="display:none">
@@ -888,6 +938,74 @@
                     '<div class="notes-section"><textarea placeholder="Add notes for today..." data-action="notes" data-id="' + habit.id + '">' + escHtml(log.notes || '') + '</textarea></div>' +
                     '</div>';
             }).join('');
+            renderSubmitBar();
+        }
+
+        // ===== SUBMIT BAR =====
+        function getSubmittedDays() {
+            var raw = localStorage.getItem('habitTracker_submitted');
+            return raw ? JSON.parse(raw) : {};
+        }
+
+        function renderSubmitBar() {
+            var section = document.getElementById('submitSection');
+            if (state.habits.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = '';
+
+            var dk = dateKey(state.viewDate);
+            var dayLogs = state.logs[dk] || {};
+            var total = state.habits.length;
+            var done = 0;
+            state.habits.forEach(function(h) { if (dayLogs[h.id] && dayLogs[h.id].completed) done++; });
+            var pct = Math.round((done / total) * 100);
+            var allDone = done === total;
+            var submitted = getSubmittedDays();
+            var isSubmitted = !!submitted[dk];
+
+            document.getElementById('submitProgressText').textContent = done + '/' + total + ' habits completed';
+            document.getElementById('submitProgressFill').style.width = pct + '%';
+
+            var fill = document.getElementById('submitProgressFill');
+            if (allDone) fill.classList.add('ready'); else fill.classList.remove('ready');
+
+            var btn = document.getElementById('submitDayBtn');
+            btn.disabled = !allDone || isSubmitted;
+            btn.className = 'btn btn-submit';
+
+            if (isSubmitted) {
+                btn.classList.add('submitted');
+                btn.textContent = '\u2705 Day Submitted';
+            } else if (allDone) {
+                btn.classList.add('ready');
+                btn.textContent = '\uD83D\uDE80 Submit Day';
+            } else {
+                btn.textContent = 'Submit Day';
+            }
+        }
+
+        function submitDay() {
+            var dk = dateKey(state.viewDate);
+            var dayLogs = state.logs[dk] || {};
+            var allDone = state.habits.length > 0 && state.habits.every(function(h) {
+                return dayLogs[h.id] && dayLogs[h.id].completed;
+            });
+            if (!allDone) { showToast('Complete all habits first!', 'error'); return; }
+
+            var submitted = getSubmittedDays();
+            if (submitted[dk]) { showToast('Already submitted today!', 'info'); return; }
+
+            submitted[dk] = {
+                time: new Date().toISOString(),
+                habits: state.habits.map(function(h) {
+                    var log = dayLogs[h.id];
+                    return { name: h.name, value: log.value, goal: h.goal, notes: log.notes || '' };
+                })
+            };
+            localStorage.setItem('habitTracker_submitted', JSON.stringify(submitted));
+
+            showToast('\uD83C\uDF89 Day submitted successfully! Great work!', 'success');
+            renderSubmitBar();
+            checkNewAchievements();
         }
 
         function renderCalendar() {
@@ -1431,6 +1549,7 @@
             document.getElementById('saveHabit').addEventListener('click', saveHabit);
             document.getElementById('deleteHabit').addEventListener('click', deleteHabitAction);
             document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
+            document.getElementById('submitDayBtn').addEventListener('click', submitDay);
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             document.getElementById('exportBtn').addEventListener('click', exportData);
             document.getElementById('importBtn').addEventListener('click', function() { document.getElementById('importFile').click(); });
