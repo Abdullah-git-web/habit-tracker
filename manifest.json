@@ -4,7 +4,7 @@
   "description": "Track your daily habits, build streaks, and stay consistent.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f1117",
+  "background_color": "#1a1614",
   "theme_color": "#10b981",
   "orientation": "any",
   "categories": ["productivity", "lifestyle", "health"],
