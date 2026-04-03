@@ -1,5 +1,5 @@
 {
-  "name": "Habit Tracker",
+  "name": "Personal Habit Tracker",
   "short_name": "Habits",
   "description": "Track your daily habits, build streaks, and stay consistent.",
   "start_url": "./index.html",

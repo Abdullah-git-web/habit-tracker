@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="icons/icon-192.svg">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Habit Tracker</title>
+    <title>Personal Personal Habit Tracker</title>
     <style>
         :root {
             --font-main: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -496,7 +496,7 @@
     <div class="app">
         <header class="header">
             <div class="header-left">
-                <h1>Habit Tracker</h1>
+                <h1>Personal Habit Tracker</h1>
                 <p id="headerDate"></p>
             </div>
             <div class="header-actions">
@@ -1632,7 +1632,7 @@
             document.getElementById('pomoRingLabel').textContent = pomo.running ? (pomo.phase === 'focus' ? 'focusing' : 'break') : 'ready';
             document.getElementById('pomoPhaseLabel').textContent = pomo.phase === 'focus' ? 'Focus Time' : 'Break Time';
 
-            document.title = (pomo.running ? String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0') + ' - ' : '') + 'Habit Tracker';
+            document.title = (pomo.running ? String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0') + ' - ' : '') + 'Personal Habit Tracker';
         }
 
         function startPomo() {
@@ -1665,7 +1665,7 @@
                         pomo.duration = 25 * 60;
                         pomo.remaining = 25 * 60;
                     }
-                    document.title = 'Habit Tracker';
+                    document.title = 'Personal Habit Tracker';
                 }
                 updatePomoDisplay();
             }, 1000);
@@ -1678,7 +1678,7 @@
             pomo.phase = 'focus';
             pomo.remaining = pomo.duration;
             document.getElementById('pomoStartBtn').textContent = 'Start';
-            document.title = 'Habit Tracker';
+            document.title = 'Personal Habit Tracker';
             updatePomoDisplay();
         }
 
@@ -1811,7 +1811,7 @@
                 pomo.duration = mins * 60;
                 pomo.remaining = mins * 60;
                 document.getElementById('pomoStartBtn').textContent = 'Start';
-                document.title = 'Habit Tracker';
+                document.title = 'Personal Habit Tracker';
                 updatePomoDisplay();
             });
             updatePomoDisplay();
