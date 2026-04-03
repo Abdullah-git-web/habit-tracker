@@ -850,7 +850,7 @@
         }
 
         function render() {
-            renderHeader(); renderQuote(); renderStats(); renderHabits(); renderDateDisplay(); updateThemeIcon();
+            renderHeader(); renderQuote(); renderStats(); renderHabits(); renderSubmitBar(); renderDateDisplay(); updateThemeIcon();
             if (state.activeView === 'calendar') renderCalendar();
             if (state.activeView === 'heatmap') renderHeatmap();
             if (state.activeView === 'achievements') renderAchievements();
@@ -900,6 +900,7 @@
                 var title = state.habits.length === 0 ? 'No habits yet' : (state.activeFilter === 'completed' ? 'Nothing completed yet' : 'All done for today!');
                 var sub = state.habits.length === 0 ? 'Add your first habit to get started!' : 'Keep going!';
                 list.innerHTML = '<div class="empty-state"><div class="empty-icon">' + icon + '</div><h3>' + title + '</h3><p>' + sub + '</p></div>';
+                renderSubmitBar();
                 return;
             }
 
