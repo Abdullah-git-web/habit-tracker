@@ -824,6 +824,22 @@
                     var data = JSON.parse(raw);
                     state.habits = Array.isArray(data.habits) ? data.habits : [];
                     state.logs = data.logs && typeof data.logs === 'object' ? data.logs : {};
+
+                    // Migrate: add any new default habits that don't exist yet
+                    var existingNames = {};
+                    state.habits.forEach(function(h) { existingNames[h.name] = true; });
+                    var added = false;
+                    DEFAULT_HABITS.forEach(function(h) {
+                        if (!existingNames[h.name]) {
+                            state.habits.push({
+                                id: generateId(), name: h.name, emoji: h.emoji, desc: h.desc,
+                                type: h.type, goal: h.goal, unit: h.unit, category: h.category,
+                                color: h.color, createdAt: new Date().toISOString(),
+                            });
+                            added = true;
+                        }
+                    });
+                    if (added) save();
                 } else {
                     state.habits = DEFAULT_HABITS.map(function(h) {
                         return {
