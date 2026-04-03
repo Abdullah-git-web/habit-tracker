@@ -359,6 +359,47 @@
         .btn-submit.ready { animation: submitPulse 2s ease-in-out infinite; }
         .btn-submit.ready:hover { animation: none; }
 
+        /* ===== HISTORY ===== */
+        .history-day {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px 24px; margin-bottom: 16px; transition: all var(--transition);
+        }
+        .history-day:hover { box-shadow: var(--shadow); }
+        .history-day-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+        .history-day-header h3 { font-size: 16px; font-weight: 600; }
+        .history-day-header .history-time { font-size: 12px; color: var(--text-muted); }
+        .history-day-header .history-badge {
+            font-size: 12px; font-weight: 600; padding: 4px 12px; border-radius: 20px;
+        }
+        .history-badge.perfect { background: var(--success-bg); color: var(--success); }
+        .history-badge.partial { background: var(--warning-bg); color: var(--warning); }
+        .history-habits-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px;
+        }
+        .history-habit-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: var(--bg-input); border-radius: var(--radius-sm);
+        }
+        .history-habit-item .hh-emoji { font-size: 20px; flex-shrink: 0; }
+        .history-habit-item .hh-info { flex: 1; min-width: 0; }
+        .history-habit-item .hh-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-habit-item .hh-progress-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .history-habit-item .hh-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .history-habit-item .hh-bar-fill { height: 100%; border-radius: 3px; }
+        .history-habit-item .hh-val { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        .history-habit-item .hh-status {
+            width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 12px; flex-shrink: 0;
+        }
+        .hh-status.done { background: var(--success-bg); color: var(--success); }
+        .hh-status.partial { background: var(--warning-bg); color: var(--warning); }
+        .history-habit-item .hh-note { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .history-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .history-empty .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
         /* ===== CONFETTI CANVAS ===== */
         #confettiCanvas {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -506,6 +547,7 @@
                 <button class="tab" data-view="heatmap">Heatmap</button>
                 <button class="tab" data-view="achievements">Achievements</button>
                 <button class="tab" data-view="pomodoro">Timer</button>
+                <button class="tab" data-view="history">History</button>
             </div>
             <div class="date-nav">
                 <button class="btn-icon" id="prevDate">&#x25C0;</button>
@@ -597,6 +639,10 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="historyView" style="display:none">
+            <div id="historyContent"></div>
         </div>
     </div>
 
@@ -1009,6 +1055,63 @@
             showToast('\uD83C\uDF89 Day submitted successfully! Great work!', 'success');
             renderSubmitBar();
             checkNewAchievements();
+        }
+
+        // ===== HISTORY VIEW =====
+        function renderHistory() {
+            var container = document.getElementById('historyContent');
+            var submitted = getSubmittedDays();
+            var days = Object.keys(submitted).sort().reverse();
+
+            if (days.length === 0) {
+                container.innerHTML = '<div class="history-empty"><div class="empty-icon">\uD83D\uDCCB</div>' +
+                    '<h3>No submissions yet</h3><p>Submit your first day to see history here.</p></div>';
+                return;
+            }
+
+            container.innerHTML = days.map(function(dk) {
+                var entry = submitted[dk];
+                var habits = entry.habits || [];
+                var totalGoalMet = 0;
+                habits.forEach(function(h) { if (h.completed || h.value >= h.goal) totalGoalMet++; });
+                var isPerfect = totalGoalMet === habits.length && habits.length > 0;
+                var pct = habits.length > 0 ? Math.round((totalGoalMet / habits.length) * 100) : 0;
+
+                var dateObj = new Date(dk + 'T00:00:00');
+                var dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                var timeStr = entry.time ? new Date(entry.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+
+                var habitsHtml = habits.map(function(h) {
+                    var goalMet = h.completed || h.value >= h.goal;
+                    var hPct = h.goal > 0 ? Math.min(100, Math.round((h.value / h.goal) * 100)) : 0;
+                    var barColor = goalMet ? 'var(--success)' : (hPct >= 50 ? 'var(--warning)' : 'var(--accent)');
+                    var matchingHabit = state.habits.find(function(sh) { return sh.name === h.name; });
+                    var emoji = matchingHabit ? matchingHabit.emoji : '\uD83D\uDCCC';
+
+                    return '<div class="history-habit-item">' +
+                        '<div class="hh-emoji">' + escHtml(emoji) + '</div>' +
+                        '<div class="hh-info">' +
+                            '<div class="hh-name">' + escHtml(h.name) + '</div>' +
+                            '<div class="hh-progress-row">' +
+                                '<div class="hh-bar"><div class="hh-bar-fill" style="width:' + hPct + '%;background:' + barColor + '"></div></div>' +
+                                '<div class="hh-val">' + h.value + '/' + h.goal + '</div>' +
+                            '</div>' +
+                            (h.notes ? '<div class="hh-note">\uD83D\uDCDD ' + escHtml(h.notes) + '</div>' : '') +
+                        '</div>' +
+                        '<div class="hh-status ' + (goalMet ? 'done' : 'partial') + '">' + (goalMet ? '\u2713' : '\u00B7') + '</div>' +
+                    '</div>';
+                }).join('');
+
+                return '<div class="history-day">' +
+                    '<div class="history-day-header">' +
+                        '<div><h3>' + dateStr + '</h3><span class="history-time">Submitted at ' + timeStr + '</span></div>' +
+                        '<span class="history-badge ' + (isPerfect ? 'perfect' : 'partial') + '">' +
+                            (isPerfect ? '\u2B50 Perfect Day' : pct + '% Goals Met') +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="history-habits-grid">' + habitsHtml + '</div>' +
+                '</div>';
+            }).join('');
         }
 
         function renderCalendar() {
@@ -1580,15 +1683,16 @@
                 document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
                 tab.classList.add('active');
                 state.activeView = tab.dataset.view;
-                ['todayView','calendarView','heatmapView','achievementsView','pomodoroView'].forEach(function(id) {
+                ['todayView','calendarView','heatmapView','achievementsView','pomodoroView','historyView'].forEach(function(id) {
                     document.getElementById(id).style.display = 'none';
                 });
-                var viewMap = {today:'todayView',calendar:'calendarView',heatmap:'heatmapView',achievements:'achievementsView',pomodoro:'pomodoroView'};
+                var viewMap = {today:'todayView',calendar:'calendarView',heatmap:'heatmapView',achievements:'achievementsView',pomodoro:'pomodoroView',history:'historyView'};
                 document.getElementById(viewMap[state.activeView]).style.display = '';
                 if (state.activeView === 'calendar') renderCalendar();
                 if (state.activeView === 'heatmap') renderHeatmap();
                 if (state.activeView === 'achievements') renderAchievements();
                 if (state.activeView === 'pomodoro') renderPomoStats();
+                if (state.activeView === 'history') renderHistory();
             });
 
             document.getElementById('filterPills').addEventListener('click', function(e) {
