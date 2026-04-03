@@ -580,6 +580,7 @@
                 <button class="btn-icon" id="exportBtn" title="Export data">&#x1F4E4;</button>
                 <button class="btn-icon" id="importBtn" title="Import data">&#x1F4E5;</button>
                 <input type="file" id="importFile" accept=".json" style="display:none">
+                <button class="btn-icon" id="resetBtn" title="Reset all data">&#x1F5D1;</button>
                 <button class="btn btn-primary" id="addHabitBtn">+ New Habit</button>
             </div>
         </header>
@@ -1685,6 +1686,20 @@
             reader.readAsText(file);
         }
 
+        function resetAllData() {
+            if (!confirm('This will DELETE all your habits, progress, mood data, and submissions. This cannot be undone.\n\nAre you sure?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('habitTracker_submitted');
+            localStorage.removeItem('habitTracker_achievements');
+            localStorage.removeItem('habitTracker_pomo');
+            localStorage.removeItem('habitTracker_moods');
+            state.habits = [];
+            state.logs = {};
+            load(); // Reloads defaults
+            render();
+            showToast('All data reset. Fresh start!', 'info');
+        }
+
         // ===== CONFETTI =====
         var confettiPieces = [];
         var confettiRunning = false;
@@ -1967,6 +1982,7 @@
             document.getElementById('submitDayBtn').addEventListener('click', submitDay);
             document.getElementById('themeToggle').addEventListener('click', toggleTheme);
             document.getElementById('exportBtn').addEventListener('click', exportData);
+            document.getElementById('resetBtn').addEventListener('click', resetAllData);
             document.getElementById('importBtn').addEventListener('click', function() { document.getElementById('importFile').click(); });
             document.getElementById('importFile').addEventListener('change', function(e) {
                 if (e.target.files[0]) importData(e.target.files[0]);
