@@ -902,6 +902,7 @@
             if (state.activeView === 'heatmap') renderHeatmap();
             if (state.activeView === 'achievements') renderAchievements();
             if (state.activeView === 'pomodoro') renderPomoStats();
+            if (state.activeView === 'history') renderHistory();
         }
 
         function renderHeader() {
@@ -1062,75 +1063,72 @@
         function renderHistory() {
             var container = document.getElementById('historyContent');
             var submitted = getSubmittedDays();
+            var dk = dateKey(state.viewDate);
+            var dayLog = state.logs[dk] || {};
+            var isSubmitted = !!submitted[dk];
+            var submittedTime = isSubmitted && submitted[dk].time ? new Date(submitted[dk].time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
 
-            // Gather all dates that have any activity from logs
-            var allDays = Object.keys(state.logs).filter(function(dk) {
-                var dayLog = state.logs[dk];
-                return Object.keys(dayLog).some(function(hid) {
-                    return dayLog[hid] && dayLog[hid].value > 0;
-                });
-            }).sort().reverse();
+            var dateStr = new Date(state.viewDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-            if (allDays.length === 0) {
+            // Check if any activity exists for this date
+            var hasActivity = Object.keys(dayLog).some(function(hid) {
+                return dayLog[hid] && dayLog[hid].value > 0;
+            });
+
+            if (!hasActivity && state.habits.length === 0) {
                 container.innerHTML = '<div class="history-empty"><div class="empty-icon">\uD83D\uDCCB</div>' +
-                    '<h3>No activity yet</h3><p>Start tracking your habits to see history here.</p></div>';
+                    '<h3>No habits created</h3><p>Add habits and start tracking to see history.</p></div>';
                 return;
             }
 
-            container.innerHTML = allDays.map(function(dk) {
-                var dayLog = state.logs[dk] || {};
-                var isSubmitted = !!submitted[dk];
-                var submittedTime = isSubmitted && submitted[dk].time ? new Date(submitted[dk].time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+            var totalGoalMet = 0;
+            var totalAnswered = 0;
+            state.habits.forEach(function(h) {
+                var log = dayLog[h.id];
+                if (log && log.value > 0) totalAnswered++;
+                if (log && log.completed) totalGoalMet++;
+            });
+            var isPerfect = totalGoalMet === state.habits.length && state.habits.length > 0;
+            var completionPct = state.habits.length > 0 ? Math.round((totalGoalMet / state.habits.length) * 100) : 0;
 
-                var dateObj = new Date(dk + 'T00:00:00');
-                var dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            // Show ALL habits for the selected date, even ones with no activity
+            var habitsHtml = state.habits.map(function(h) {
+                var log = dayLog[h.id] || { value: 0, completed: false, notes: '' };
+                var goalMet = log.completed;
+                var hPct = h.goal > 0 ? Math.min(100, Math.round((log.value / h.goal) * 100)) : 0;
+                var barColor = goalMet ? 'var(--success)' : (hPct >= 50 ? 'var(--warning)' : (log.value > 0 ? 'var(--accent)' : 'var(--border)'));
 
-                var totalGoalMet = 0;
-                var totalAnswered = 0;
-                state.habits.forEach(function(h) {
-                    var log = dayLog[h.id];
-                    if (log && log.value > 0) totalAnswered++;
-                    if (log && log.completed) totalGoalMet++;
-                });
-                var isPerfect = totalGoalMet === state.habits.length && state.habits.length > 0;
-                var completionPct = state.habits.length > 0 ? Math.round((totalGoalMet / state.habits.length) * 100) : 0;
-
-                var habitsHtml = state.habits.map(function(h) {
-                    var log = dayLog[h.id] || { value: 0, completed: false, notes: '' };
-                    if (log.value === 0 && !log.notes) return '';
-                    var goalMet = log.completed;
-                    var hPct = h.goal > 0 ? Math.min(100, Math.round((log.value / h.goal) * 100)) : 0;
-                    var barColor = goalMet ? 'var(--success)' : (hPct >= 50 ? 'var(--warning)' : 'var(--accent)');
-
-                    return '<div class="history-habit-item">' +
-                        '<div class="hh-emoji">' + escHtml(h.emoji) + '</div>' +
-                        '<div class="hh-info">' +
-                            '<div class="hh-name">' + escHtml(h.name) + '</div>' +
-                            '<div class="hh-progress-row">' +
-                                '<div class="hh-bar"><div class="hh-bar-fill" style="width:' + hPct + '%;background:' + barColor + '"></div></div>' +
-                                '<div class="hh-val">' + log.value + '/' + h.goal + (h.unit ? ' ' + escHtml(h.unit) : '') + '</div>' +
-                            '</div>' +
-                            (log.notes ? '<div class="hh-note">\uD83D\uDCDD ' + escHtml(log.notes) + '</div>' : '') +
+                return '<div class="history-habit-item">' +
+                    '<div class="hh-emoji">' + escHtml(h.emoji) + '</div>' +
+                    '<div class="hh-info">' +
+                        '<div class="hh-name">' + escHtml(h.name) + '</div>' +
+                        '<div class="hh-progress-row">' +
+                            '<div class="hh-bar"><div class="hh-bar-fill" style="width:' + hPct + '%;background:' + barColor + '"></div></div>' +
+                            '<div class="hh-val">' + log.value + '/' + h.goal + (h.unit ? ' ' + escHtml(h.unit) : '') + '</div>' +
                         '</div>' +
-                        '<div class="hh-status ' + (goalMet ? 'done' : 'partial') + '">' + (goalMet ? '\u2713' : '\u00B7') + '</div>' +
-                    '</div>';
-                }).filter(function(s) { return s !== ''; }).join('');
-
-                var statusBadge;
-                if (isPerfect) statusBadge = '<span class="history-badge perfect">\u2B50 Perfect Day</span>';
-                else if (isSubmitted) statusBadge = '<span class="history-badge submitted">\u2705 Submitted \u00B7 ' + completionPct + '% Goals</span>';
-                else statusBadge = '<span class="history-badge partial">' + completionPct + '% Goals \u00B7 ' + totalAnswered + '/' + state.habits.length + ' tracked</span>';
-
-                var timeInfo = isSubmitted ? 'Submitted at ' + submittedTime : totalAnswered + ' of ' + state.habits.length + ' habits tracked';
-
-                return '<div class="history-day">' +
-                    '<div class="history-day-header">' +
-                        '<div><h3>' + dateStr + '</h3><span class="history-time">' + timeInfo + '</span></div>' +
-                        statusBadge +
+                        (log.notes ? '<div class="hh-note">\uD83D\uDCDD ' + escHtml(log.notes) + '</div>' : '') +
                     '</div>' +
-                    '<div class="history-habits-grid">' + habitsHtml + '</div>' +
+                    '<div class="hh-status ' + (goalMet ? 'done' : (log.value > 0 ? 'partial' : '')) + '">' +
+                        (goalMet ? '\u2713' : (log.value > 0 ? '\u00B7' : '\u2014')) +
+                    '</div>' +
                 '</div>';
             }).join('');
+
+            var statusBadge;
+            if (!hasActivity) statusBadge = '<span class="history-badge partial">No activity</span>';
+            else if (isPerfect) statusBadge = '<span class="history-badge perfect">\u2B50 Perfect Day</span>';
+            else if (isSubmitted) statusBadge = '<span class="history-badge submitted">\u2705 Submitted \u00B7 ' + completionPct + '% Goals</span>';
+            else statusBadge = '<span class="history-badge partial">' + completionPct + '% Goals \u00B7 ' + totalAnswered + '/' + state.habits.length + ' tracked</span>';
+
+            var timeInfo = isSubmitted ? 'Submitted at ' + submittedTime : (hasActivity ? totalAnswered + ' of ' + state.habits.length + ' habits tracked' : 'No habits tracked this day');
+
+            container.innerHTML = '<div class="history-day">' +
+                '<div class="history-day-header">' +
+                    '<div><h3>' + dateStr + '</h3><span class="history-time">' + timeInfo + '</span></div>' +
+                    statusBadge +
+                '</div>' +
+                '<div class="history-habits-grid">' + habitsHtml + '</div>' +
+            '</div>';
         }
 
         function renderCalendar() {
