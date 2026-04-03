@@ -955,41 +955,43 @@
             var dk = dateKey(state.viewDate);
             var dayLogs = state.logs[dk] || {};
             var total = state.habits.length;
-            var done = 0;
-            state.habits.forEach(function(h) { if (dayLogs[h.id] && dayLogs[h.id].completed) done++; });
-            var pct = Math.round((done / total) * 100);
-            var allDone = done === total;
+            var answered = 0;
+            state.habits.forEach(function(h) {
+                if (dayLogs[h.id] && dayLogs[h.id].value > 0) answered++;
+            });
+            var pct = Math.round((answered / total) * 100);
+            var allAnswered = answered === total;
             var submitted = getSubmittedDays();
             var isSubmitted = !!submitted[dk];
 
-            document.getElementById('submitProgressText').textContent = done + '/' + total + ' habits completed';
+            document.getElementById('submitProgressText').textContent = answered + '/' + total + ' habits answered';
             document.getElementById('submitProgressFill').style.width = pct + '%';
 
             var fill = document.getElementById('submitProgressFill');
-            if (allDone) fill.classList.add('ready'); else fill.classList.remove('ready');
+            if (allAnswered) fill.classList.add('ready'); else fill.classList.remove('ready');
 
             var btn = document.getElementById('submitDayBtn');
-            btn.disabled = !allDone || isSubmitted;
+            btn.disabled = !allAnswered || isSubmitted;
             btn.className = 'btn btn-submit';
 
             if (isSubmitted) {
                 btn.classList.add('submitted');
                 btn.textContent = '\u2705 Day Submitted';
-            } else if (allDone) {
+            } else if (allAnswered) {
                 btn.classList.add('ready');
                 btn.textContent = '\uD83D\uDE80 Submit Day';
             } else {
-                btn.textContent = 'Submit Day';
+                btn.textContent = 'Submit Day (' + (total - answered) + ' remaining)';
             }
         }
 
         function submitDay() {
             var dk = dateKey(state.viewDate);
             var dayLogs = state.logs[dk] || {};
-            var allDone = state.habits.length > 0 && state.habits.every(function(h) {
-                return dayLogs[h.id] && dayLogs[h.id].completed;
+            var allAnswered = state.habits.length > 0 && state.habits.every(function(h) {
+                return dayLogs[h.id] && dayLogs[h.id].value > 0;
             });
-            if (!allDone) { showToast('Complete all habits first!', 'error'); return; }
+            if (!allAnswered) { showToast('Answer all habits first!', 'error'); return; }
 
             var submitted = getSubmittedDays();
             if (submitted[dk]) { showToast('Already submitted today!', 'info'); return; }
@@ -997,8 +999,8 @@
             submitted[dk] = {
                 time: new Date().toISOString(),
                 habits: state.habits.map(function(h) {
-                    var log = dayLogs[h.id];
-                    return { name: h.name, value: log.value, goal: h.goal, notes: log.notes || '' };
+                    var log = dayLogs[h.id] || { value: 0, notes: '' };
+                    return { name: h.name, value: log.value, goal: h.goal, completed: log.completed || false, notes: log.notes || '' };
                 })
             };
             localStorage.setItem('habitTracker_submitted', JSON.stringify(submitted));
