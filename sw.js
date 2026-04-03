@@ -1,4 +1,4 @@
-var CACHE_NAME = 'habit-tracker-v5';
+var CACHE_NAME = 'habit-tracker-v6';
 var ASSETS = [
     './',
     './index.html',
