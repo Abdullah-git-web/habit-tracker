@@ -354,6 +354,82 @@
         }
         .btn-submit.ready { animation: none; }
 
+        /* ===== MOOD CHECK-IN ===== */
+        .mood-checkin {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 18px 24px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .mood-checkin .mood-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; }
+        .mood-options { display: flex; gap: 6px; }
+        .mood-btn {
+            width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--border);
+            background: transparent; font-size: 22px; cursor: pointer; transition: all var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .mood-btn:hover { border-color: var(--accent); transform: scale(1.15); }
+        .mood-btn.selected { border-color: var(--accent); background: var(--accent-glow); transform: scale(1.15); }
+        .energy-slider-wrap { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 180px; }
+        .energy-slider-wrap label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+        .energy-slider {
+            -webkit-appearance: none; appearance: none; flex: 1; height: 6px;
+            background: var(--bg-input); border-radius: 3px; outline: none;
+        }
+        .energy-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--accent); cursor: pointer; border: 2px solid var(--bg-primary);
+        }
+        .energy-val { font-size: 14px; font-weight: 700; color: var(--accent); min-width: 20px; text-align: center; }
+        .mood-insight {
+            width: 100%; margin-top: 8px; padding: 10px 14px; background: var(--bg-input);
+            border-radius: var(--radius-sm); font-size: 13px; color: var(--text-secondary);
+            display: none;
+        }
+        .mood-insight.visible { display: block; }
+
+        /* ===== LEADERBOARD ===== */
+        .leaderboard { margin-bottom: 30px; }
+        .lb-item {
+            display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            margin-bottom: 8px; transition: all var(--transition);
+        }
+        .lb-item:hover { border-color: var(--accent); }
+        .lb-rank {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0;
+        }
+        .lb-rank.gold { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .lb-rank.silver { background: rgba(148,163,184,0.15); color: #94a3b8; }
+        .lb-rank.bronze { background: rgba(217,119,6,0.15); color: #d97706; }
+        .lb-rank.normal { background: var(--bg-input); color: var(--text-muted); }
+        .lb-info { flex: 1; min-width: 0; }
+        .lb-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .lb-stats { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .lb-score { font-size: 20px; font-weight: 700; color: var(--accent); text-align: right; }
+        .lb-score small { font-size: 11px; color: var(--text-muted); font-weight: 500; display: block; }
+        .lb-bar { width: 100px; height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+        .lb-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.5s ease; }
+
+        /* ===== FOCUS MODE ===== */
+        .focus-mode-toggle {
+            display: flex; align-items: center; gap: 8px; margin-left: auto;
+        }
+        .focus-switch {
+            width: 44px; height: 24px; border-radius: 12px; background: var(--border);
+            position: relative; cursor: pointer; transition: background var(--transition); border: none;
+        }
+        .focus-switch::after {
+            content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+            border-radius: 50%; background: var(--text-muted); transition: all var(--transition);
+        }
+        .focus-switch.on { background: var(--accent); }
+        .focus-switch.on::after { left: 23px; background: #fff; }
+        .focus-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .habit-card.focus-dimmed { opacity: 0.15; pointer-events: none; transform: scale(0.98); }
+        .habit-card.focus-active { border-color: var(--accent); box-shadow: 0 0 20px rgba(16,185,129,0.1); }
+        .focus-nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 16px; }
+        .focus-nav.hidden { display: none; }
+
         /* ===== HISTORY ===== */
         .history-day {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
@@ -513,6 +589,24 @@
             <span id="quoteText"></span>
         </div>
 
+        <!-- Mood Check-in -->
+        <div class="mood-checkin" id="moodCheckin">
+            <span class="mood-label">How are you feeling?</span>
+            <div class="mood-options" id="moodOptions">
+                <button class="mood-btn" data-mood="1" title="Awful">&#x1F629;</button>
+                <button class="mood-btn" data-mood="2" title="Bad">&#x1F61E;</button>
+                <button class="mood-btn" data-mood="3" title="Okay">&#x1F610;</button>
+                <button class="mood-btn" data-mood="4" title="Good">&#x1F60A;</button>
+                <button class="mood-btn" data-mood="5" title="Amazing">&#x1F929;</button>
+            </div>
+            <div class="energy-slider-wrap">
+                <label>&#x26A1; Energy</label>
+                <input type="range" class="energy-slider" id="energySlider" min="1" max="10" value="5">
+                <span class="energy-val" id="energyVal">5</span>
+            </div>
+            <div class="mood-insight" id="moodInsight"></div>
+        </div>
+
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon purple">&#x1F4CA;</div>
@@ -543,6 +637,7 @@
                 <button class="tab" data-view="heatmap">Heatmap</button>
                 <button class="tab" data-view="achievements">Achievements</button>
                 <button class="tab" data-view="pomodoro">Timer</button>
+                <button class="tab" data-view="leaderboard">Leaderboard</button>
                 <button class="tab" data-view="history">History</button>
             </div>
             <div class="date-nav">
@@ -556,6 +651,15 @@
             <button class="pill active" data-filter="all">All</button>
             <button class="pill" data-filter="pending">Pending</button>
             <button class="pill" data-filter="completed">Completed</button>
+            <div class="focus-mode-toggle">
+                <span class="focus-label">Focus Mode</span>
+                <button class="focus-switch" id="focusToggle" title="Focus on one habit at a time"></button>
+            </div>
+        </div>
+        <div class="focus-nav hidden" id="focusNav">
+            <button class="btn-icon" id="focusPrev" title="Previous habit">&#x25C0;</button>
+            <span id="focusCounter" style="font-size:13px;color:var(--text-secondary);font-weight:600;min-width:60px;text-align:center"></span>
+            <button class="btn-icon" id="focusNext" title="Next habit">&#x25B6;</button>
         </div>
 
         <div id="todayView">
@@ -635,6 +739,10 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div id="leaderboardView" style="display:none">
+            <div class="leaderboard" id="leaderboardContent"></div>
         </div>
 
         <div id="historyView" style="display:none">
@@ -930,11 +1038,12 @@
         }
 
         function render() {
-            renderHeader(); renderQuote(); renderStats(); renderHabits(); renderSubmitBar(); renderDateDisplay(); updateThemeIcon();
+            renderHeader(); renderQuote(); renderStats(); renderMoodCheckin(); renderHabits(); renderSubmitBar(); renderDateDisplay(); updateThemeIcon();
             if (state.activeView === 'calendar') renderCalendar();
             if (state.activeView === 'heatmap') renderHeatmap();
             if (state.activeView === 'achievements') renderAchievements();
             if (state.activeView === 'pomodoro') renderPomoStats();
+            if (state.activeView === 'leaderboard') renderLeaderboard();
             if (state.activeView === 'history') renderHistory();
         }
 
@@ -1093,6 +1202,154 @@
             renderSubmitBar();
             checkNewAchievements();
         }
+
+        // ===== MOOD CHECK-IN =====
+        function getMoodData() {
+            var raw = localStorage.getItem('habitTracker_moods');
+            return raw ? JSON.parse(raw) : {};
+        }
+
+        function saveMoodData(data) {
+            localStorage.setItem('habitTracker_moods', JSON.stringify(data));
+        }
+
+        function renderMoodCheckin() {
+            var dk = dateKey(state.viewDate);
+            var moods = getMoodData();
+            var today = moods[dk] || {};
+            // Highlight selected mood
+            document.querySelectorAll('.mood-btn').forEach(function(btn) {
+                btn.classList.toggle('selected', btn.dataset.mood === String(today.mood || 0));
+            });
+            // Set energy slider
+            document.getElementById('energySlider').value = today.energy || 5;
+            document.getElementById('energyVal').textContent = today.energy || 5;
+            // Show insight
+            renderMoodInsight(dk);
+        }
+
+        function renderMoodInsight(dk) {
+            var moods = getMoodData();
+            var insight = document.getElementById('moodInsight');
+            // Analyze last 7 days
+            var moodSum = 0, energySum = 0, count = 0;
+            for (var i = 0; i < 7; i++) {
+                var d = new Date(); d.setDate(d.getDate() - i);
+                var k = dateKey(d);
+                if (moods[k] && moods[k].mood) {
+                    moodSum += moods[k].mood;
+                    energySum += moods[k].energy || 5;
+                    count++;
+                }
+            }
+            if (count < 2) { insight.classList.remove('visible'); return; }
+
+            var avgMood = (moodSum / count).toFixed(1);
+            var avgEnergy = (energySum / count).toFixed(1);
+            var rate = getCompletionRate(state.viewDate);
+
+            var moodLabel = avgMood >= 4 ? 'great' : avgMood >= 3 ? 'okay' : 'low';
+            var tip = '';
+            if (avgMood >= 4 && rate >= 70) tip = '\uD83D\uDCAA Your mood and habits are strongly aligned. Keep it up!';
+            else if (avgMood < 3 && rate < 50) tip = '\uD83C\uDF31 Low mood + low completion. Start small \u2014 even 1 habit counts.';
+            else if (avgMood >= 4 && rate < 50) tip = '\u26A1 Great mood but low tracking \u2014 channel that energy into your habits!';
+            else if (avgMood < 3 && rate >= 70) tip = '\uD83C\uDFC6 Pushing through despite tough days. That\'s real discipline.';
+            else tip = '\uD83D\uDCC8 7-day avg: mood ' + avgMood + '/5, energy ' + avgEnergy + '/10. ' + count + ' days logged.';
+
+            insight.textContent = tip;
+            insight.classList.add('visible');
+        }
+
+        // ===== LEADERBOARD =====
+        function renderLeaderboard() {
+            var container = document.getElementById('leaderboardContent');
+            if (state.habits.length === 0) {
+                container.innerHTML = '<div class="history-empty"><div class="empty-icon">\uD83C\uDFC6</div><h3>No habits to rank</h3><p>Add habits to see the leaderboard.</p></div>';
+                return;
+            }
+
+            var ranked = state.habits.map(function(h) {
+                var streak = getStreak(h.id);
+                var bestStreak = getBestStreak(h.id);
+                var totalDone = 0, totalDays = 0;
+                Object.keys(state.logs).forEach(function(dk) {
+                    if (state.logs[dk][h.id]) {
+                        totalDays++;
+                        if (state.logs[dk][h.id].completed) totalDone++;
+                    }
+                });
+                var consistency = totalDays > 0 ? Math.round((totalDone / totalDays) * 100) : 0;
+                // Score: weighted combination
+                var score = (streak * 3) + (bestStreak * 2) + consistency;
+                return { habit: h, streak: streak, bestStreak: bestStreak, totalDone: totalDone, consistency: consistency, score: score };
+            }).sort(function(a, b) { return b.score - a.score; });
+
+            var maxScore = ranked[0].score || 1;
+
+            container.innerHTML = ranked.map(function(r, i) {
+                var rankClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
+                var medal = i === 0 ? '\uD83E\uDD47' : i === 1 ? '\uD83E\uDD48' : i === 2 ? '\uD83E\uDD49' : (i + 1);
+                var barPct = Math.round((r.score / maxScore) * 100);
+
+                return '<div class="lb-item">' +
+                    '<div class="lb-rank ' + rankClass + '">' + medal + '</div>' +
+                    '<div class="lb-info">' +
+                        '<div class="lb-name">' + escHtml(r.habit.emoji) + ' ' + escHtml(r.habit.name) + '</div>' +
+                        '<div class="lb-stats">\uD83D\uDD25 ' + r.streak + ' streak \u00B7 \u2B50 ' + r.bestStreak + ' best \u00B7 ' + r.consistency + '% consistent</div>' +
+                    '</div>' +
+                    '<div class="lb-bar"><div class="lb-bar-fill" style="width:' + barPct + '%"></div></div>' +
+                    '<div class="lb-score">' + r.score + '<small>points</small></div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // ===== FOCUS MODE =====
+        var focusMode = false;
+        var focusIndex = 0;
+
+        function toggleFocusMode() {
+            focusMode = !focusMode;
+            document.getElementById('focusToggle').classList.toggle('on', focusMode);
+            document.getElementById('focusNav').classList.toggle('hidden', !focusMode);
+            if (focusMode) focusIndex = 0;
+            renderHabits();
+        }
+
+        function applyFocusMode() {
+            if (!focusMode) return;
+            var cards = document.querySelectorAll('#habitsList .habit-card');
+            if (cards.length === 0) return;
+            if (focusIndex >= cards.length) focusIndex = 0;
+            cards.forEach(function(card, i) {
+                card.classList.remove('focus-dimmed', 'focus-active');
+                if (i === focusIndex) card.classList.add('focus-active');
+                else card.classList.add('focus-dimmed');
+            });
+            document.getElementById('focusCounter').textContent = (focusIndex + 1) + ' / ' + cards.length;
+            // Scroll active into view
+            cards[focusIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function focusNext() {
+            var cards = document.querySelectorAll('#habitsList .habit-card');
+            if (cards.length === 0) return;
+            focusIndex = (focusIndex + 1) % cards.length;
+            applyFocusMode();
+        }
+
+        function focusPrev() {
+            var cards = document.querySelectorAll('#habitsList .habit-card');
+            if (cards.length === 0) return;
+            focusIndex = (focusIndex - 1 + cards.length) % cards.length;
+            applyFocusMode();
+        }
+
+        // Patch renderHabits to apply focus after render
+        var _origRenderHabits = renderHabits;
+        renderHabits = function() {
+            _origRenderHabits();
+            if (focusMode) applyFocusMode();
+        };
 
         // ===== HISTORY VIEW =====
         function renderHistory() {
@@ -1735,15 +1992,16 @@
                 document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
                 tab.classList.add('active');
                 state.activeView = tab.dataset.view;
-                ['todayView','calendarView','heatmapView','achievementsView','pomodoroView','historyView'].forEach(function(id) {
+                ['todayView','calendarView','heatmapView','achievementsView','pomodoroView','leaderboardView','historyView'].forEach(function(id) {
                     document.getElementById(id).style.display = 'none';
                 });
-                var viewMap = {today:'todayView',calendar:'calendarView',heatmap:'heatmapView',achievements:'achievementsView',pomodoro:'pomodoroView',history:'historyView'};
+                var viewMap = {today:'todayView',calendar:'calendarView',heatmap:'heatmapView',achievements:'achievementsView',pomodoro:'pomodoroView',leaderboard:'leaderboardView',history:'historyView'};
                 document.getElementById(viewMap[state.activeView]).style.display = '';
                 if (state.activeView === 'calendar') renderCalendar();
                 if (state.activeView === 'heatmap') renderHeatmap();
                 if (state.activeView === 'achievements') renderAchievements();
                 if (state.activeView === 'pomodoro') renderPomoStats();
+                if (state.activeView === 'leaderboard') renderLeaderboard();
                 if (state.activeView === 'history') renderHistory();
             });
 
@@ -1816,6 +2074,33 @@
             });
             updatePomoDisplay();
             renderPomoStats();
+
+            // Mood check-in
+            document.getElementById('moodOptions').addEventListener('click', function(e) {
+                var btn = e.target.closest('.mood-btn');
+                if (!btn) return;
+                var dk = dateKey(state.viewDate);
+                var moods = getMoodData();
+                if (!moods[dk]) moods[dk] = {};
+                moods[dk].mood = parseInt(btn.dataset.mood, 10);
+                saveMoodData(moods);
+                renderMoodCheckin();
+                playSound('click');
+            });
+            document.getElementById('energySlider').addEventListener('input', function(e) {
+                document.getElementById('energyVal').textContent = e.target.value;
+                var dk = dateKey(state.viewDate);
+                var moods = getMoodData();
+                if (!moods[dk]) moods[dk] = {};
+                moods[dk].energy = parseInt(e.target.value, 10);
+                saveMoodData(moods);
+                renderMoodInsight(dk);
+            });
+
+            // Focus mode
+            document.getElementById('focusToggle').addEventListener('click', toggleFocusMode);
+            document.getElementById('focusNext').addEventListener('click', focusNext);
+            document.getElementById('focusPrev').addEventListener('click', focusPrev);
 
             render();
         }
