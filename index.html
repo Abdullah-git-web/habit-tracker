@@ -1047,38 +1047,40 @@
                 if (dayLogs[h.id] && dayLogs[h.id].value > 0) answered++;
             });
             var pct = Math.round((answered / total) * 100);
-            var allAnswered = answered === total;
+            var minRequired = 5;
+            var canSubmit = answered >= minRequired;
             var submitted = getSubmittedDays();
             var isSubmitted = !!submitted[dk];
 
-            document.getElementById('submitProgressText').textContent = answered + '/' + total + ' habits answered';
+            document.getElementById('submitProgressText').textContent = answered + '/' + total + ' habits answered (min ' + minRequired + ' required)';
             document.getElementById('submitProgressFill').style.width = pct + '%';
 
             var fill = document.getElementById('submitProgressFill');
-            if (allAnswered) fill.classList.add('ready'); else fill.classList.remove('ready');
+            if (canSubmit) fill.classList.add('ready'); else fill.classList.remove('ready');
 
             var btn = document.getElementById('submitDayBtn');
-            btn.disabled = !allAnswered || isSubmitted;
+            btn.disabled = !canSubmit || isSubmitted;
             btn.className = 'btn btn-submit';
 
             if (isSubmitted) {
                 btn.classList.add('submitted');
                 btn.textContent = '\u2705 Day Submitted';
-            } else if (allAnswered) {
+            } else if (canSubmit) {
                 btn.classList.add('ready');
-                btn.textContent = '\uD83D\uDE80 Submit Day';
+                btn.textContent = '\uD83D\uDE80 Submit Day (' + answered + '/' + total + ')';
             } else {
-                btn.textContent = 'Submit Day (' + (total - answered) + ' remaining)';
+                btn.textContent = 'Submit Day (' + (minRequired - answered) + ' more needed)';
             }
         }
 
         function submitDay() {
             var dk = dateKey(state.viewDate);
             var dayLogs = state.logs[dk] || {};
-            var allAnswered = state.habits.length > 0 && state.habits.every(function(h) {
-                return dayLogs[h.id] && dayLogs[h.id].value > 0;
+            var answered = 0;
+            state.habits.forEach(function(h) {
+                if (dayLogs[h.id] && dayLogs[h.id].value > 0) answered++;
             });
-            if (!allAnswered) { showToast('Answer all habits first!', 'error'); return; }
+            if (answered < 5) { showToast('Answer at least 5 habits first!', 'error'); return; }
 
             var submitted = getSubmittedDays();
             if (submitted[dk]) { showToast('Already submitted today!', 'info'); return; }
